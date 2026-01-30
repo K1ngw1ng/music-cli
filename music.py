@@ -17,6 +17,11 @@ def format_meta(meta, fallback):
     return meta if meta else fallback
 
 def draw_ui(stdscr, player, track, idx, total, volume):
+    try:
+        pos = player.time_pos or 0
+        dur = player.duration or 0
+    except Exception:
+        pos, dur = 0, 0
     stdscr.clear()
     h, w = stdscr.getmaxyx()
 
@@ -37,9 +42,22 @@ def draw_ui(stdscr, player, track, idx, total, volume):
     center(4, title, True)
     center(6, f"{artist} — {album}")
     center(8, f"Track {idx + 1}/{total}")
-    center(10, f"Volume: {volume}%")
+        # progress bar
+    bar_width = max(10, w - 20)
+    progress = 0 if dur == 0 else min(1.0, pos / dur)
+    filled = int(bar_width * progress)
+    bar = "█" * filled + "─" * (bar_width - filled)
 
-    center(h - 4, "Space: Play/Pause   ←/→: Prev/Next")
+    def fmt(t):
+        m, s = divmod(int(t), 60)
+        return f"{m}:{s:02d}"
+
+    center(10, f"[{bar}]")
+    center(11, f"{fmt(pos)} / {fmt(dur)}")
+    center(13, f"Volume: {volume}%")
+
+    center(h - 5, "Space: Play/Pause   ←/→: Prev/Next")
+    center(h - 4, "a / d: Seek −5s / +5s")
     center(h - 3, "+ / -: Volume   q: Quit")
 
     stdscr.refresh()
@@ -95,6 +113,16 @@ def main(stdscr, music_dir):
             player.volume = volume
 
         elif key == ord("-"):
+            volume = max(0, volume - 5)
+            player.volume = volume
+
+        elif key == ord("a"):
+            if player.time_pos is not None:
+                player.time_pos = max(0, player.time_pos - 5)
+
+        elif key == ord("d"):
+            if player.time_pos is not None and player.duration:
+                player.time_pos = min(player.duration, player.time_pos + 5)
             volume = max(0, volume - 5)
             player.volume = volume
 
