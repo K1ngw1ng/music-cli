@@ -4,6 +4,8 @@ import curses
 import time
 from pathlib import Path
 from mpv import MPV
+import subprocess
+import os
 
 AUDIO_EXTS = (".mp3", ".flac", ".wav", ".ogg", ".m4a")
 
@@ -17,6 +19,24 @@ def format_meta(meta, fallback):
     return meta if meta else fallback
 
 def draw_ui(stdscr, player, track, idx, total, volume):
+    try:
+        pos = player.time_pos or 0
+        dur = player.duration or 0
+    except Exception:
+        pos, dur = 0, 0
+
+    # attempt to show album art via kitty protocol (if supported)
+    art_path = None
+    if player.metadata:
+        art_path = player.metadata.get("artwork") or player.metadata.get("cover")
+
+    if art_path and os.environ.get("TERM", "").startswith("xterm-kitty"):
+        subprocess.run([
+            "kitty", "+kitten", "icat",
+            "--silent",
+            "--place", "20x20@2x2",
+            art_path
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         pos = player.time_pos or 0
         dur = player.duration or 0
@@ -38,7 +58,9 @@ def draw_ui(stdscr, player, track, idx, total, volume):
     artist = format_meta(meta.get("artist"), "Unknown Artist")
     album = format_meta(meta.get("album"), "Unknown Album")
 
-    center(2, "♪ Python CLI Music Player ♪", True)
+        center(2, "♪ Python CLI Music Player ♪", True)
+    if art_path:
+        center(3, "[album art]")
     center(4, title, True)
     center(6, f"{artist} — {album}")
     center(8, f"Track {idx + 1}/{total}")
@@ -56,7 +78,7 @@ def draw_ui(stdscr, player, track, idx, total, volume):
     center(11, f"{fmt(pos)} / {fmt(dur)}")
     center(13, f"Volume: {volume}%")
 
-    center(h - 5, "Space: Play/Pause   ←/→: Prev/Next")
+        center(h - 5, "Space: Play/Pause   ←/→: Prev/Next")
     center(h - 4, "a / d: Seek −5s / +5s")
     center(h - 3, "+ / -: Volume   q: Quit")
 
@@ -112,7 +134,7 @@ def main(stdscr, music_dir):
             volume = min(100, volume + 5)
             player.volume = volume
 
-        elif key == ord("-"):
+                elif key == ord("-"):
             volume = max(0, volume - 5)
             player.volume = volume
 
