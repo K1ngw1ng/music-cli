@@ -38,7 +38,7 @@ def draw_ui(stdscr, player, track, idx, total, volume):
     artist = format_meta(meta.get("artist"), "Unknown Artist")
     album = format_meta(meta.get("album"), "Unknown Album")
 
-    center(2, "♪ Python CLI Music Player ♪", True)
+    center(2, "♪ - Music Player - ♪", True)
     center(4, title, True)
     center(6, f"{artist} — {album}")
     center(8, f"Track {idx + 1}/{total}")
