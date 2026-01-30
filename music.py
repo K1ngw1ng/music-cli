@@ -133,6 +133,6 @@ def main(stdscr, music_dir):
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 2:
-        print("Usage: tui_music.py <music-directory>")
+        print("Usage: music.py <music-directory>")
         sys.exit(1)
     curses.wrapper(main, sys.argv[1])
